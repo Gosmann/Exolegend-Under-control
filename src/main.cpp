@@ -89,7 +89,7 @@ void frente(){
     Position pos = data.position;
     double ang = pos.a;
 
-    // if(currentDirection==Direction::NORTH){
+    // if(currentDirectionn==Direction::NORTH){
     //     ang=M_PI/2;
     // }
     // if(currentDirection==Direction::EAST){
