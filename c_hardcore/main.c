@@ -5,6 +5,59 @@
 void from_map_to_graph(char map[14][14] , maze_square maze[14][14] );
 void show_graph( maze_square maze[14][14] );
 
+int look_for( maze_square maze[14][14], int_position start, int_position finish, int deep, int deep_w, int flag){
+    //printf("inside \n");
+    
+    int i; int ans = -1;
+    
+    int_position new = {0};
+
+    //printf("[%d] [%d] [%d] [%d] -> [%d]/[%d] \n", start.x, start.y, finish.x, finish.y, deep, deep_w);
+    if( start.x == finish.x && start.y == finish.y ){
+        
+        //printf("correct! [%d] \n", deep);
+        flag = 1;
+        
+        return deep;
+    }
+
+    else if( deep < 12 && flag == 0 ){
+        
+        if( maze[start.x][start.y].north != NULL  ){            
+            new.x = start.x;
+            new.y = start.y + 1;
+            ans = look_for( maze, new, finish, deep+1, deep_w, flag);   
+            //printf("[%d] - ans \n", ans);
+        }
+
+        if( maze[start.x][start.y].south != NULL && ans == -1 ){            
+            new.x = start.x;
+            new.y = start.y - 1;
+            ans = look_for( maze, new, finish, deep+1, deep_w, flag);        
+        }
+
+        if( maze[start.x][start.y].east != NULL && ans == -1 ){    
+            new.x = start.x + 1;
+            new.y = start.y;        
+            ans = look_for( maze, new, finish, deep+1, deep_w, flag);        
+        }
+        
+        if( maze[start.x][start.y].west != NULL && ans == -1 ){            
+            new.x = start.x - 1 ;
+            new.y = start.y;
+            ans = look_for( maze, new, finish, deep+1, deep_w, flag);        
+        }
+        
+        return ans;
+
+    }
+
+    else{
+        return -1;    
+    }
+        
+}
+
 int main(){
     
     maze_square maze[14][14] = {0} ;
@@ -32,24 +85,28 @@ int main(){
     
     from_map_to_graph( map, maze ) ;
     
-    printf("FINISHED! \n");
+    //printf("FINISHED! \n");
 
-    show_graph( maze );
+    //show_graph( maze );
     
     //look_for(position start, position finish, maze_square maze);
-    position start = {0};
+    int_position start = {0};
     start.x = 0;
     start.y = 7;
 
-    position finish = {0};
-    finish.x = 0;
-    finish.y = 8;
+    int_position finish = {0};
+    finish.x = 7;
+    finish.y = 7;
 
     char looked[14][14] = {0} ;
 
     int deep = 0;
-    
+    int deep_w = 0;
+    int flag = 0;
 
+    int dist = look_for( maze, start, finish, deep, deep_w, flag );
+    //int dist = 0;
+    printf("dist: [%d] \n", dist);
 
 }   
 

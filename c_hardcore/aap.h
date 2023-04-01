@@ -9,6 +9,14 @@ typedef struct position{
 
 } position ;
 
+typedef struct int_position{
+
+    int x;
+    int y;
+    double a;
+
+} int_position ;
+
 typedef struct coin{
     
     char value;
