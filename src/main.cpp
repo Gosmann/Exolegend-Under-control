@@ -22,33 +22,20 @@ double angleFromDirection(int sentido, float currentAngle);
 double desired_pos(int i);
 
 double motorPID_LEFT(double setpoint){
-    double Kp = 22.44;
+    double Kp = 2.244;
 
     double measure = abs(gladiator->robot->getData().vl)/0.8;
     double erro = setpoint-measure; 
     double resultado = Kp*erro;
-
-    if(resultado>0.4){
-        resultado = 0.4;
-    }
-    if(resultado<-0.4){
-        resultado = -0.4;
-    }
     return resultado;
 }
 
 double motorPID_RIGHT(double setpoint){
-    double Kp = 22.44;
+    double Kp = 2.244;
 
     double measure = abs(gladiator->robot->getData().vr)/0.8;
     double erro = setpoint-measure; 
     double resultado = Kp*erro;
-    if(resultado>0.4){
-        resultado = 0.4;
-    }
-    if(resultado<-0.4){
-        resultado = -0.4;
-    }
     return resultado;
 }
 
@@ -228,26 +215,44 @@ void frente_old(){
 }
 
 double integral_PI_frente_LEFT = 0;
+double last_error_LEFT = -20;
 double correcaoPI_frenteLEFT(double erro){
-    double Kp = 0.3;
-    double Ki = 0.000000001;
+    double Kp = 0.5;
+    double Ki = 0.000000004;
+    double Kd = 0.3;
+    double correcaoKD = 0;
+    if(last_error_LEFT==-20){
+        last_error_LEFT = erro;
+    }else{
+        correcaoKD = (erro-last_error_LEFT)*Kd;
+        last_error_LEFT = erro;
+    }
     integral_PI_frente_LEFT+=erro;
     if(integral_PI_frente_LEFT*Ki>0.5){
         integral_PI_frente_LEFT=0;
     }
-    double correcao = Kp*erro+Ki*integral_PI_frente_LEFT;
+    double correcao = Kp*erro+Ki*integral_PI_frente_LEFT+correcaoKD;
     return correcao;
 }
 
 double integral_PI_frente_RIGHT = 0;
+double last_error_RIGHT = -20;
 double correcaoPI_frenteRIGHT(double erro){
-    double Kp = 0.3;
-    double Ki = 0.000000001;
+    double Kp = 0.5;
+    double Ki = 0.000000004;
+    double Kd = 0.3;
+    double correcaoKD = 0;
+    if(last_error_RIGHT==-20){
+        last_error_RIGHT = erro;
+    }else{
+        correcaoKD = (erro-last_error_RIGHT)*Kd;
+        last_error_RIGHT = erro;
+    }
     integral_PI_frente_RIGHT+=erro;
     if(integral_PI_frente_RIGHT*Ki>0.5){
         integral_PI_frente_RIGHT=0;
     }
-    double correcao = Kp*erro+Ki*integral_PI_frente_RIGHT;
+    double correcao = Kp*erro+Ki*integral_PI_frente_RIGHT+correcaoKD;
     return correcao;
 }
 
@@ -266,6 +271,7 @@ void frente(int squares = 1, double baseSpeed = 0.4){
 
     double erro = 0;
     double Kp = 0.05;
+    double tol = 0.01;
 
     int num_of_squares = 0;
 
@@ -345,7 +351,7 @@ void frente(int squares = 1, double baseSpeed = 0.4){
     Kp = 1;
     if(currentDirection==Direction::NORTH){
         pos=gladiator->robot->getData().position;
-        while(abs(desired_pos(current_square.j)-pos.y)>0.01){
+        while(abs(desired_pos(current_square.j)-pos.y)>tol){
             pos = gladiator->robot->getData().position;
             erro = desired_pos(current_square.j)-pos.y;
             setWheelVelocity(WheelAxis::LEFT, Kp*erro);
@@ -355,7 +361,7 @@ void frente(int squares = 1, double baseSpeed = 0.4){
 
     if(currentDirection==Direction::SOUTH){
         pos=gladiator->robot->getData().position;
-        while(abs(pos.y-desired_pos(current_square.j))>0.01){
+        while(abs(pos.y-desired_pos(current_square.j))>tol){
             pos = gladiator->robot->getData().position;
             erro = pos.y-desired_pos(current_square.j);
             setWheelVelocity(WheelAxis::LEFT, Kp*erro);
@@ -365,7 +371,7 @@ void frente(int squares = 1, double baseSpeed = 0.4){
 
     if(currentDirection==Direction::EAST){
         pos=gladiator->robot->getData().position;
-        while(abs(desired_pos(current_square.i)-pos.x)>0.01){
+        while(abs(desired_pos(current_square.i)-pos.x)>tol){
             pos = gladiator->robot->getData().position;
             erro = desired_pos(current_square.i)-pos.x;
             setWheelVelocity(WheelAxis::LEFT, Kp*erro);
@@ -375,7 +381,7 @@ void frente(int squares = 1, double baseSpeed = 0.4){
 
     if(currentDirection==Direction::WEST){
         pos=gladiator->robot->getData().position;
-        while(abs(pos.x-desired_pos(current_square.i))>0.01){
+        while(abs(pos.x-desired_pos(current_square.i))>tol){
             pos = gladiator->robot->getData().position;
             erro = pos.x-desired_pos(current_square.i);
             setWheelVelocity(WheelAxis::LEFT, Kp*erro);
@@ -646,8 +652,8 @@ void loop() {
         // setWheelVelocity(WheelAxis::RIGHT,0);
         // setWheelVelocity(WheelAxis::LEFT,0);
         
-        int dire[] = {1,0,0,1,0,3,0,0,1,0,0,0,3,3,0,3,2,3,3,2,2,2,1,1,2,1,0,0,0,3,2};
-        follow_directions(&dire[0],31);
+        int dire[] = {1,0,0,1,0,3,0,0,1,0,0,0,3,3,0,3,2,3,3,2,2,2,1,1,2,1,0,0,0,3,2,2,3,2,2,3,3,3,0,1,1,3,0,0,0,0,0,1, 1,0,3,3};
+        follow_directions(&dire[0],52);
         // standard_function();
         // farmar_pontos();
 
