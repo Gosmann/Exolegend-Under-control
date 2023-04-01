@@ -53,14 +53,15 @@ double motorPID_RIGHT(double setpoint){
 }
 
 void setWheelVelocity(WheelAxis ax, float vel){
-    // if(gladiator->robot->getData().speedLimit<0.5){
-    //     vel = vel*10;
-    // }
-    if(ax==WheelAxis::RIGHT){
-        gladiator->control->setWheelSpeed(ax, motorPID_RIGHT(vel));
-    }else{
-        gladiator->control->setWheelSpeed(ax, motorPID_LEFT(vel));
+    if(gladiator->robot->getData().speedLimit<0.5){
+        vel = vel*10;
     }
+    gladiator->control->setWheelSpeed(ax, vel);
+    // if(ax==WheelAxis::RIGHT){
+    //     gladiator->control->setWheelSpeed(ax, motorPID_RIGHT(vel));
+    // }else{
+    //     gladiator->control->setWheelSpeed(ax, motorPID_LEFT(vel));
+    // }
 }
 
 void reset();
@@ -250,7 +251,7 @@ double correcaoPI_frenteRIGHT(double erro){
     return correcao;
 }
 
-void frente(int squares = 1, double baseSpeed = 0.05){
+void frente(int squares = 1, double baseSpeed = 0.4){
     //base = 0.4, KP 0.05
     RobotData data = gladiator->robot->getData();
     Position pos = data.position;
@@ -470,9 +471,9 @@ bool shouldUseAntihorario(Direction sentido){
     }
 }
 
-void curva(Direction sentido, double baseSpeed = 0.05){
+void curva(Direction sentido, double baseSpeed = 0.2){
     RobotData data = gladiator->robot->getData();
-    double Kp = 0.01; //0.2vel = 0.4KP
+    double Kp = 0.4; //0.2vel = 0.4KP
     double tol = 0.005;
     //5% de velocidade, Kp=0.15
     if(currentDirection==sentido){
@@ -492,20 +493,15 @@ void curva(Direction sentido, double baseSpeed = 0.05){
     double currentAngle = gladiator->robot->getData().position.a;
 
     if(sentido==Direction::NORTH){
-        // while(!(currentAngle>M_PI/4&&currentAngle<3*M_PI/4)){
-        //     currentAngle = gladiator->robot->getData().position.a;
-        // }
+        while(!(currentAngle>M_PI/4&&currentAngle<3*M_PI/4)){
+            currentAngle = gladiator->robot->getData().position.a;
+        }
         double erro = angleFromDirection(sentido)-currentAngle;
         while(abs(erro)>tol){
             erro = angleFromDirection(sentido)-currentAngle;
             currentAngle = gladiator->robot->getData().position.a;
             setWheelVelocity(WheelAxis::LEFT, -Kp*erro);
             setWheelVelocity(WheelAxis::RIGHT, Kp*erro);   
-        }
-        setWheelVelocity(WheelAxis::RIGHT,0);
-        setWheelVelocity(WheelAxis::LEFT,0);
-        while(true){
-            
         }
     }
 
