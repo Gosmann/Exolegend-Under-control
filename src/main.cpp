@@ -437,7 +437,7 @@ bool equalSign(double a, double b){
     return false;
 }
 
-bool shouldUseAntihorario(Direction sentido){
+bool shouldUseAntihorario(int sentido){
     if(currentDirection==Direction::NORTH){
         if(sentido==Direction::EAST){
             return false;
@@ -471,7 +471,7 @@ bool shouldUseAntihorario(Direction sentido){
     }
 }
 
-void curva(Direction sentido, double baseSpeed = 0.2){
+void curva(int sentido, double baseSpeed = 0.2){
     RobotData data = gladiator->robot->getData();
     double Kp = 0.4; //0.2vel = 0.4KP
     double tol = 0.005;
@@ -616,6 +616,26 @@ void farmar_pontos(){
     frente();
 }
 
+void follow_directions(int *directions, int len){
+    int last_direction=-1;
+    for(int i=0;i<len;i++){
+        if(directions[i]!=last_direction){
+            curva(directions[i]);
+        }
+        last_direction=currentDirection;
+        int counter = 0;
+        for(int j=0;(j+i)<len;j++){
+            if(directions[i+j]==directions[i]){
+                counter+=1;
+            }else{
+                j=len;
+            }
+        }
+        i+=(counter-1);
+        frente(counter);
+    }
+}
+
 void loop() {
     if(gladiator->game->isStarted()) { //tester si un match à déjà commencer
         //code de votre stratégie
@@ -626,7 +646,9 @@ void loop() {
         // setWheelVelocity(WheelAxis::RIGHT,0);
         // setWheelVelocity(WheelAxis::LEFT,0);
         
-        standard_function();
+        int dire[] = {1,0,0,1,0,3,0,0,1,0,0,0,3,3,0,3,2,3,3,2,2,2,1,1,2,1,0,0,0,3,2};
+        follow_directions(&dire[0],31);
+        // standard_function();
         // farmar_pontos();
 
         // curva(Direction::NORTH);
