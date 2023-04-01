@@ -272,6 +272,7 @@ void frente(int squares = 1, double baseSpeed = 0.4){
     double erro = 0;
     double Kp = 0.05;
     double tol = 0.01;
+    double tol_derro = 0.005;
 
     int num_of_squares = 0;
 
@@ -351,9 +352,13 @@ void frente(int squares = 1, double baseSpeed = 0.4){
     Kp = 1;
     if(currentDirection==Direction::NORTH){
         pos=gladiator->robot->getData().position;
-        while(abs(desired_pos(current_square.j)-pos.y)>tol){
+        double derro=0;
+        double ultimo_erro=0;
+        while(abs(desired_pos(current_square.j)-pos.y)>tol||abs(derro)){
             pos = gladiator->robot->getData().position;
             erro = desired_pos(current_square.j)-pos.y;
+            derro = erro-ultimo_erro;
+            ultimo_erro = erro;
             setWheelVelocity(WheelAxis::LEFT, Kp*erro);
             setWheelVelocity(WheelAxis::RIGHT, Kp*erro);
         }
@@ -361,9 +366,13 @@ void frente(int squares = 1, double baseSpeed = 0.4){
 
     if(currentDirection==Direction::SOUTH){
         pos=gladiator->robot->getData().position;
-        while(abs(pos.y-desired_pos(current_square.j))>tol){
+        double derro=0;
+        double ultimo_erro=0;
+        while(abs(pos.y-desired_pos(current_square.j))>tol||abs(derro)){
             pos = gladiator->robot->getData().position;
             erro = pos.y-desired_pos(current_square.j);
+            derro = erro-ultimo_erro;
+            ultimo_erro = erro;
             setWheelVelocity(WheelAxis::LEFT, Kp*erro);
             setWheelVelocity(WheelAxis::RIGHT, Kp*erro);
         }
@@ -371,9 +380,13 @@ void frente(int squares = 1, double baseSpeed = 0.4){
 
     if(currentDirection==Direction::EAST){
         pos=gladiator->robot->getData().position;
-        while(abs(desired_pos(current_square.i)-pos.x)>tol){
+        double derro=0;
+        double ultimo_erro=0;
+        while(abs(desired_pos(current_square.i)-pos.x)>tol||abs(derro)){
             pos = gladiator->robot->getData().position;
             erro = desired_pos(current_square.i)-pos.x;
+            derro = erro-ultimo_erro;
+            ultimo_erro = erro;
             setWheelVelocity(WheelAxis::LEFT, Kp*erro);
             setWheelVelocity(WheelAxis::RIGHT, Kp*erro);
         }
@@ -381,9 +394,13 @@ void frente(int squares = 1, double baseSpeed = 0.4){
 
     if(currentDirection==Direction::WEST){
         pos=gladiator->robot->getData().position;
-        while(abs(pos.x-desired_pos(current_square.i))>tol){
+        double derro=0;
+        double ultimo_erro=0;
+        while(abs(pos.x-desired_pos(current_square.i))>tol||abs(derro)){
             pos = gladiator->robot->getData().position;
             erro = pos.x-desired_pos(current_square.i);
+            derro = erro-ultimo_erro;
+            ultimo_erro = erro;
             setWheelVelocity(WheelAxis::LEFT, Kp*erro);
             setWheelVelocity(WheelAxis::RIGHT, Kp*erro);
         }
@@ -481,6 +498,7 @@ void curva(int sentido, double baseSpeed = 0.2){
     RobotData data = gladiator->robot->getData();
     double Kp = 0.4; //0.2vel = 0.4KP
     double tol = 0.005;
+    double tol_derro = 0.001;
     //5% de velocidade, Kp=0.15
     if(currentDirection==sentido){
         return;
@@ -503,8 +521,12 @@ void curva(int sentido, double baseSpeed = 0.2){
             currentAngle = gladiator->robot->getData().position.a;
         }
         double erro = angleFromDirection(sentido)-currentAngle;
-        while(abs(erro)>tol){
+        double derro = 0;
+        double ultimo_erro = -20;
+        while(abs(erro)>tol||abs(derro)>tol_derro){
             erro = angleFromDirection(sentido)-currentAngle;
+            derro = ultimo_erro-erro;
+            ultimo_erro = erro;
             currentAngle = gladiator->robot->getData().position.a;
             setWheelVelocity(WheelAxis::LEFT, -Kp*erro);
             setWheelVelocity(WheelAxis::RIGHT, Kp*erro);   
@@ -516,8 +538,12 @@ void curva(int sentido, double baseSpeed = 0.2){
             currentAngle = gladiator->robot->getData().position.a;
         }
         double erro = angleFromDirection(sentido)-currentAngle;
-        while(abs(erro)>tol){
+        double derro = 0;
+        double ultimo_erro = -20;
+        while(abs(erro)>tol||abs(derro)>tol_derro){
             erro = angleFromDirection(sentido)-currentAngle;
+            derro = ultimo_erro-erro;
+            ultimo_erro = erro;
             currentAngle = gladiator->robot->getData().position.a;
             setWheelVelocity(WheelAxis::LEFT, -Kp*erro);
             setWheelVelocity(WheelAxis::RIGHT, Kp*erro);   
@@ -529,8 +555,12 @@ void curva(int sentido, double baseSpeed = 0.2){
             currentAngle = gladiator->robot->getData().position.a;
         }
         double erro = angleFromDirection(sentido)-currentAngle;
-        while(abs(erro)>tol){
+        double derro = 0;
+        double ultimo_erro = -20;
+        while(abs(erro)>tol||abs(derro)>tol_derro){
             erro = angleFromDirection(sentido)-currentAngle;
+            derro = ultimo_erro-erro;
+            ultimo_erro = erro;
             currentAngle = gladiator->robot->getData().position.a;
             setWheelVelocity(WheelAxis::LEFT, -Kp*erro);
             setWheelVelocity(WheelAxis::RIGHT, Kp*erro);   
@@ -542,8 +572,12 @@ void curva(int sentido, double baseSpeed = 0.2){
             currentAngle = gladiator->robot->getData().position.a;
         }
         double erro = angleFromDirection(sentido,currentAngle)-currentAngle;
+        double derro = 0;
+        double ultimo_erro = -20;
         while(abs(erro)>tol){
             erro = angleFromDirection(sentido,currentAngle)-currentAngle;
+            derro = ultimo_erro-erro;
+            ultimo_erro = erro;
             currentAngle = gladiator->robot->getData().position.a;
             setWheelVelocity(WheelAxis::LEFT, -Kp*erro);
             setWheelVelocity(WheelAxis::RIGHT, Kp*erro);   
@@ -652,7 +686,7 @@ void loop() {
         // setWheelVelocity(WheelAxis::RIGHT,0);
         // setWheelVelocity(WheelAxis::LEFT,0);
         
-        int dire[] = {1,0,0,1,0,3,0,0,1,0,0,0,3,3,0,3,2,3,3,2,2,2,1,1,2,1,0,0,0,3,2,2,3,2,2,3,3,3,0,1,1,3,0,0,0,0,0,1, 1,0,3,3};
+        int dire[] = {1,0,0,1,0,3,0,0,1,0,0,0,3,3,0,3,2,3,3,2,2,2,1,1,2,1,0,0,0,3,2,2,3,2,2,3,3,3,0,1,1,3,0,0,0,0,0,1,1,0,3,3};
         follow_directions(&dire[0],52);
         // standard_function();
         // farmar_pontos();
