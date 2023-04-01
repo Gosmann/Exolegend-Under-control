@@ -16,10 +16,52 @@ vector<int> visitedPlaces = {};
 int initial_i = 0;
 int initial_j = 0;
 
-void curva(Direction sentido);
+void curva(Direction sentido, double baseSpeed);
 Direction directionFromAngle(double angle);
 double angleFromDirection(int sentido, float currentAngle);
 double desired_pos(int i);
+
+double motorPID_LEFT(double setpoint){
+    double Kp = 22.44;
+
+    double measure = abs(gladiator->robot->getData().vl)/0.8;
+    double erro = setpoint-measure; 
+    double resultado = Kp*erro;
+
+    if(resultado>0.4){
+        resultado = 0.4;
+    }
+    if(resultado<-0.4){
+        resultado = -0.4;
+    }
+    return resultado;
+}
+
+double motorPID_RIGHT(double setpoint){
+    double Kp = 22.44;
+
+    double measure = abs(gladiator->robot->getData().vr)/0.8;
+    double erro = setpoint-measure; 
+    double resultado = Kp*erro;
+    if(resultado>0.4){
+        resultado = 0.4;
+    }
+    if(resultado<-0.4){
+        resultado = -0.4;
+    }
+    return resultado;
+}
+
+void setWheelVelocity(WheelAxis ax, float vel){
+    // if(gladiator->robot->getData().speedLimit<0.5){
+    //     vel = vel*10;
+    // }
+    if(ax==WheelAxis::RIGHT){
+        gladiator->control->setWheelSpeed(ax, motorPID_RIGHT(vel));
+    }else{
+        gladiator->control->setWheelSpeed(ax, motorPID_LEFT(vel));
+    }
+}
 
 void reset();
 void setup() {
@@ -43,8 +85,8 @@ void reset() {
     currentDirection = directionFromAngle(ang);
     gladiator->log(to_string(currentDirection).c_str());
     gladiator->log("Ang");
-    //gladiator->control->setWheelSpeed(WheelAxis::LEFT, -0.05);
-    //gladiator->control->setWheelSpeed(WheelAxis::RIGHT, 0.05);
+    //setWheelVelocity(WheelAxis::LEFT, -0.05);
+    //setWheelVelocity(WheelAxis::RIGHT, 0.05);
 
 }
 
@@ -57,12 +99,12 @@ void noventa_graus(bool antiHorario){
 
     double ang = pos.a;
     if(antiHorario){
-        gladiator->control->setWheelSpeed(WheelAxis::LEFT, -0.05);
-        gladiator->control->setWheelSpeed(WheelAxis::RIGHT, 0.05);
+        setWheelVelocity(WheelAxis::LEFT, -0.05);
+        setWheelVelocity(WheelAxis::RIGHT, 0.05);
         currentDirection+=1;
     }else{
-        gladiator->control->setWheelSpeed(WheelAxis::LEFT, 0.05);
-        gladiator->control->setWheelSpeed(WheelAxis::RIGHT, -0.05);
+        setWheelVelocity(WheelAxis::LEFT, 0.05);
+        setWheelVelocity(WheelAxis::RIGHT, -0.05);
         currentDirection-=1;
     }
     if(currentDirection==-1){
@@ -76,8 +118,8 @@ void noventa_graus(bool antiHorario){
         data = gladiator->robot->getData();
     }
     gladiator->log("Final");
-    gladiator->control->setWheelSpeed(WheelAxis::LEFT, 0);
-    gladiator->control->setWheelSpeed(WheelAxis::RIGHT, 0);
+    setWheelVelocity(WheelAxis::LEFT, 0);
+    setWheelVelocity(WheelAxis::RIGHT, 0);
     delay(1000);
 }
 
@@ -91,8 +133,8 @@ void frente_older(){
 
     MazeSquare square = gladiator->maze->getNearestSquare();
     MazeSquare current_square = square;
-    gladiator->control->setWheelSpeed(WheelAxis::LEFT, 0.2);
-    gladiator->control->setWheelSpeed(WheelAxis::RIGHT, 0.2);
+    setWheelVelocity(WheelAxis::LEFT, 0.2);
+    setWheelVelocity(WheelAxis::RIGHT, 0.2);
 
     double erro = 0;
     double Kp = 0.1;
@@ -102,15 +144,15 @@ void frente_older(){
         ang = angleFromDirection(currentDirection,current_angle);
         erro = current_angle-ang;
 
-        gladiator->control->setWheelSpeed(WheelAxis::LEFT, 0.2+Kp*erro);
-        gladiator->control->setWheelSpeed(WheelAxis::RIGHT, 0.2-Kp*erro);
+        setWheelVelocity(WheelAxis::LEFT, 0.2+Kp*erro);
+        setWheelVelocity(WheelAxis::RIGHT, 0.2-Kp*erro);
 
         current_square = gladiator->maze->getNearestSquare();
     }
     delay(200);
     visitedPlaces.insert(visitedPlaces.end(),current_square.i*10+current_square.j);
-    gladiator->control->setWheelSpeed(WheelAxis::LEFT, 0);
-    gladiator->control->setWheelSpeed(WheelAxis::RIGHT, 0);
+    setWheelVelocity(WheelAxis::LEFT, 0);
+    setWheelVelocity(WheelAxis::RIGHT, 0);
 }
 
 void frente_old(){
@@ -122,8 +164,8 @@ void frente_old(){
 
     MazeSquare square = gladiator->maze->getNearestSquare();
     MazeSquare current_square = square;
-    gladiator->control->setWheelSpeed(WheelAxis::LEFT, 0.2);
-    gladiator->control->setWheelSpeed(WheelAxis::RIGHT, 0.2);
+    setWheelVelocity(WheelAxis::LEFT, 0.2);
+    setWheelVelocity(WheelAxis::RIGHT, 0.2);
 
     double erro = 0;
     double Kp = 0.1;
@@ -133,8 +175,8 @@ void frente_old(){
         ang = angleFromDirection(currentDirection,current_angle);
         erro = current_angle-ang;
 
-        gladiator->control->setWheelSpeed(WheelAxis::LEFT, 0.2+Kp*erro);
-        gladiator->control->setWheelSpeed(WheelAxis::RIGHT, 0.2-Kp*erro);
+        setWheelVelocity(WheelAxis::LEFT, 0.2+Kp*erro);
+        setWheelVelocity(WheelAxis::RIGHT, 0.2-Kp*erro);
 
         current_square = gladiator->maze->getNearestSquare();
     }
@@ -145,8 +187,8 @@ void frente_old(){
         while(desired_pos(current_square.j)-pos.y>0.01){
             pos = gladiator->robot->getData().position;
             erro = desired_pos(current_square.j)-pos.y;
-            gladiator->control->setWheelSpeed(WheelAxis::LEFT, Kp*erro);
-            gladiator->control->setWheelSpeed(WheelAxis::RIGHT, Kp*erro);
+            setWheelVelocity(WheelAxis::LEFT, Kp*erro);
+            setWheelVelocity(WheelAxis::RIGHT, Kp*erro);
         }
     }
 
@@ -155,8 +197,8 @@ void frente_old(){
         while(pos.y-desired_pos(current_square.j)>0.01){
             pos = gladiator->robot->getData().position;
             erro = pos.y-desired_pos(current_square.j);
-            gladiator->control->setWheelSpeed(WheelAxis::LEFT, Kp*erro);
-            gladiator->control->setWheelSpeed(WheelAxis::RIGHT, Kp*erro);
+            setWheelVelocity(WheelAxis::LEFT, Kp*erro);
+            setWheelVelocity(WheelAxis::RIGHT, Kp*erro);
         }
     }
 
@@ -165,8 +207,8 @@ void frente_old(){
         while(desired_pos(current_square.i)-pos.x>0.01){
             pos = gladiator->robot->getData().position;
             erro = desired_pos(current_square.i)-pos.x;
-            gladiator->control->setWheelSpeed(WheelAxis::LEFT, Kp*erro);
-            gladiator->control->setWheelSpeed(WheelAxis::RIGHT, Kp*erro);
+            setWheelVelocity(WheelAxis::LEFT, Kp*erro);
+            setWheelVelocity(WheelAxis::RIGHT, Kp*erro);
         }
     }
 
@@ -175,16 +217,41 @@ void frente_old(){
         while(pos.x-desired_pos(current_square.i)>0.01){
             pos = gladiator->robot->getData().position;
             erro = pos.x-desired_pos(current_square.i);
-            gladiator->control->setWheelSpeed(WheelAxis::LEFT, Kp*erro);
-            gladiator->control->setWheelSpeed(WheelAxis::RIGHT, Kp*erro);
+            setWheelVelocity(WheelAxis::LEFT, Kp*erro);
+            setWheelVelocity(WheelAxis::RIGHT, Kp*erro);
         }
     }
 
-    gladiator->control->setWheelSpeed(WheelAxis::LEFT, 0);
-    gladiator->control->setWheelSpeed(WheelAxis::RIGHT, 0);
+    setWheelVelocity(WheelAxis::LEFT, 0);
+    setWheelVelocity(WheelAxis::RIGHT, 0);
 }
 
-void frente(int squares = 1){
+double integral_PI_frente_LEFT = 0;
+double correcaoPI_frenteLEFT(double erro){
+    double Kp = 0.3;
+    double Ki = 0.000000001;
+    integral_PI_frente_LEFT+=erro;
+    if(integral_PI_frente_LEFT*Ki>0.5){
+        integral_PI_frente_LEFT=0;
+    }
+    double correcao = Kp*erro+Ki*integral_PI_frente_LEFT;
+    return correcao;
+}
+
+double integral_PI_frente_RIGHT = 0;
+double correcaoPI_frenteRIGHT(double erro){
+    double Kp = 0.3;
+    double Ki = 0.000000001;
+    integral_PI_frente_RIGHT+=erro;
+    if(integral_PI_frente_RIGHT*Ki>0.5){
+        integral_PI_frente_RIGHT=0;
+    }
+    double correcao = Kp*erro+Ki*integral_PI_frente_RIGHT;
+    return correcao;
+}
+
+void frente(int squares = 1, double baseSpeed = 0.05){
+    //base = 0.4, KP 0.05
     RobotData data = gladiator->robot->getData();
     Position pos = data.position;
     MazeSquare square = gladiator->maze->getNearestSquare();
@@ -193,11 +260,11 @@ void frente(int squares = 1){
     double set_y = pos.y;
     double set_x = pos.x;
 
-    gladiator->control->setWheelSpeed(WheelAxis::LEFT, 0.2);
-    gladiator->control->setWheelSpeed(WheelAxis::RIGHT, 0.2);
+    setWheelVelocity(WheelAxis::LEFT, baseSpeed);
+    setWheelVelocity(WheelAxis::RIGHT, baseSpeed);
 
     double erro = 0;
-    double Kp = 0.1;
+    double Kp = 0.05;
 
     int num_of_squares = 0;
 
@@ -209,8 +276,8 @@ void frente(int squares = 1){
                 current_y = gladiator->robot->getData().position.y;
                 erro = set_y-current_y;
 
-                gladiator->control->setWheelSpeed(WheelAxis::LEFT, 0.2-Kp*erro);
-                gladiator->control->setWheelSpeed(WheelAxis::RIGHT, 0.2+Kp*erro);
+                setWheelVelocity(WheelAxis::LEFT, baseSpeed-correcaoPI_frenteLEFT(erro));
+                setWheelVelocity(WheelAxis::RIGHT, baseSpeed+correcaoPI_frenteRIGHT(erro));
 
                 current_square = gladiator->maze->getNearestSquare();
             }
@@ -227,8 +294,8 @@ void frente(int squares = 1){
                 current_y = gladiator->robot->getData().position.y;
                 erro = set_y-current_y;
 
-                gladiator->control->setWheelSpeed(WheelAxis::LEFT, 0.2+Kp*erro);
-                gladiator->control->setWheelSpeed(WheelAxis::RIGHT, 0.2-Kp*erro);
+                setWheelVelocity(WheelAxis::LEFT, baseSpeed+correcaoPI_frenteLEFT(erro));
+                setWheelVelocity(WheelAxis::RIGHT, baseSpeed-correcaoPI_frenteRIGHT(erro));
 
                 current_square = gladiator->maze->getNearestSquare();
             }
@@ -245,8 +312,8 @@ void frente(int squares = 1){
                 current_x = gladiator->robot->getData().position.x;
                 erro = set_x-current_x;
 
-                gladiator->control->setWheelSpeed(WheelAxis::LEFT, 0.2+Kp*erro);
-                gladiator->control->setWheelSpeed(WheelAxis::RIGHT, 0.2-Kp*erro);
+                setWheelVelocity(WheelAxis::LEFT, baseSpeed+correcaoPI_frenteLEFT(erro));
+                setWheelVelocity(WheelAxis::RIGHT, baseSpeed-correcaoPI_frenteRIGHT(erro));
 
                 current_square = gladiator->maze->getNearestSquare();
             }
@@ -263,8 +330,8 @@ void frente(int squares = 1){
                 current_x = gladiator->robot->getData().position.x;
                 erro = set_x-current_x;
 
-                gladiator->control->setWheelSpeed(WheelAxis::LEFT, 0.2-Kp*erro);
-                gladiator->control->setWheelSpeed(WheelAxis::RIGHT, 0.2+Kp*erro);
+                setWheelVelocity(WheelAxis::LEFT, baseSpeed-correcaoPI_frenteLEFT(erro));
+                setWheelVelocity(WheelAxis::RIGHT, baseSpeed+correcaoPI_frenteRIGHT(erro));
 
                 current_square = gladiator->maze->getNearestSquare();
             }
@@ -274,49 +341,49 @@ void frente(int squares = 1){
         
     }
     
-    Kp = 2;
+    Kp = 1;
     if(currentDirection==Direction::NORTH){
         pos=gladiator->robot->getData().position;
-        while(desired_pos(current_square.j)-pos.y>0.01){
+        while(abs(desired_pos(current_square.j)-pos.y)>0.01){
             pos = gladiator->robot->getData().position;
             erro = desired_pos(current_square.j)-pos.y;
-            gladiator->control->setWheelSpeed(WheelAxis::LEFT, Kp*erro);
-            gladiator->control->setWheelSpeed(WheelAxis::RIGHT, Kp*erro);
+            setWheelVelocity(WheelAxis::LEFT, Kp*erro);
+            setWheelVelocity(WheelAxis::RIGHT, Kp*erro);
         }
     }
 
     if(currentDirection==Direction::SOUTH){
         pos=gladiator->robot->getData().position;
-        while(pos.y-desired_pos(current_square.j)>0.01){
+        while(abs(pos.y-desired_pos(current_square.j))>0.01){
             pos = gladiator->robot->getData().position;
             erro = pos.y-desired_pos(current_square.j);
-            gladiator->control->setWheelSpeed(WheelAxis::LEFT, Kp*erro);
-            gladiator->control->setWheelSpeed(WheelAxis::RIGHT, Kp*erro);
+            setWheelVelocity(WheelAxis::LEFT, Kp*erro);
+            setWheelVelocity(WheelAxis::RIGHT, Kp*erro);
         }
     }
 
     if(currentDirection==Direction::EAST){
         pos=gladiator->robot->getData().position;
-        while(desired_pos(current_square.i)-pos.x>0.01){
+        while(abs(desired_pos(current_square.i)-pos.x)>0.01){
             pos = gladiator->robot->getData().position;
             erro = desired_pos(current_square.i)-pos.x;
-            gladiator->control->setWheelSpeed(WheelAxis::LEFT, Kp*erro);
-            gladiator->control->setWheelSpeed(WheelAxis::RIGHT, Kp*erro);
+            setWheelVelocity(WheelAxis::LEFT, Kp*erro);
+            setWheelVelocity(WheelAxis::RIGHT, Kp*erro);
         }
     }
 
     if(currentDirection==Direction::WEST){
         pos=gladiator->robot->getData().position;
-        while(pos.x-desired_pos(current_square.i)>0.01){
+        while(abs(pos.x-desired_pos(current_square.i))>0.01){
             pos = gladiator->robot->getData().position;
             erro = pos.x-desired_pos(current_square.i);
-            gladiator->control->setWheelSpeed(WheelAxis::LEFT, Kp*erro);
-            gladiator->control->setWheelSpeed(WheelAxis::RIGHT, Kp*erro);
+            setWheelVelocity(WheelAxis::LEFT, Kp*erro);
+            setWheelVelocity(WheelAxis::RIGHT, Kp*erro);
         }
     }
 
-    gladiator->control->setWheelSpeed(WheelAxis::LEFT, 0);
-    gladiator->control->setWheelSpeed(WheelAxis::RIGHT, 0);
+    setWheelVelocity(WheelAxis::LEFT, 0);
+    setWheelVelocity(WheelAxis::RIGHT, 0);
 }
 
 int notVisitedSquare(MazeSquare* square){
@@ -403,9 +470,10 @@ bool shouldUseAntihorario(Direction sentido){
     }
 }
 
-void curva(Direction sentido){
+void curva(Direction sentido, double baseSpeed = 0.05){
     RobotData data = gladiator->robot->getData();
-    double Kp = 0.25;
+    double Kp = 0.01; //0.2vel = 0.4KP
+    double tol = 0.005;
     //5% de velocidade, Kp=0.15
     if(currentDirection==sentido){
         return;
@@ -414,25 +482,30 @@ void curva(Direction sentido){
     bool antiHorario = shouldUseAntihorario(sentido);
 
     if(antiHorario){
-        gladiator->control->setWheelSpeed(WheelAxis::LEFT, -0.2);
-        gladiator->control->setWheelSpeed(WheelAxis::RIGHT, 0.2);
+        setWheelVelocity(WheelAxis::LEFT, -baseSpeed);
+        setWheelVelocity(WheelAxis::RIGHT, baseSpeed);
     }else{
-        gladiator->control->setWheelSpeed(WheelAxis::LEFT, 0.2);
-        gladiator->control->setWheelSpeed(WheelAxis::RIGHT, -0.2);
+        setWheelVelocity(WheelAxis::LEFT, baseSpeed);
+        setWheelVelocity(WheelAxis::RIGHT, -baseSpeed);
     }
 
     double currentAngle = gladiator->robot->getData().position.a;
 
     if(sentido==Direction::NORTH){
-        while(!(currentAngle>M_PI/4&&currentAngle<3*M_PI/4)){
-            currentAngle = gladiator->robot->getData().position.a;
-        }
+        // while(!(currentAngle>M_PI/4&&currentAngle<3*M_PI/4)){
+        //     currentAngle = gladiator->robot->getData().position.a;
+        // }
         double erro = angleFromDirection(sentido)-currentAngle;
-        while(abs(erro)>0.01){
+        while(abs(erro)>tol){
             erro = angleFromDirection(sentido)-currentAngle;
             currentAngle = gladiator->robot->getData().position.a;
-            gladiator->control->setWheelSpeed(WheelAxis::LEFT, -Kp*erro);
-            gladiator->control->setWheelSpeed(WheelAxis::RIGHT, Kp*erro);   
+            setWheelVelocity(WheelAxis::LEFT, -Kp*erro);
+            setWheelVelocity(WheelAxis::RIGHT, Kp*erro);   
+        }
+        setWheelVelocity(WheelAxis::RIGHT,0);
+        setWheelVelocity(WheelAxis::LEFT,0);
+        while(true){
+            
         }
     }
 
@@ -441,11 +514,11 @@ void curva(Direction sentido){
             currentAngle = gladiator->robot->getData().position.a;
         }
         double erro = angleFromDirection(sentido)-currentAngle;
-        while(abs(erro)>0.01){
+        while(abs(erro)>tol){
             erro = angleFromDirection(sentido)-currentAngle;
             currentAngle = gladiator->robot->getData().position.a;
-            gladiator->control->setWheelSpeed(WheelAxis::LEFT, -Kp*erro);
-            gladiator->control->setWheelSpeed(WheelAxis::RIGHT, Kp*erro);   
+            setWheelVelocity(WheelAxis::LEFT, -Kp*erro);
+            setWheelVelocity(WheelAxis::RIGHT, Kp*erro);   
         }
     }
 
@@ -454,11 +527,11 @@ void curva(Direction sentido){
             currentAngle = gladiator->robot->getData().position.a;
         }
         double erro = angleFromDirection(sentido)-currentAngle;
-        while(abs(erro)>0.01){
+        while(abs(erro)>tol){
             erro = angleFromDirection(sentido)-currentAngle;
             currentAngle = gladiator->robot->getData().position.a;
-            gladiator->control->setWheelSpeed(WheelAxis::LEFT, -Kp*erro);
-            gladiator->control->setWheelSpeed(WheelAxis::RIGHT, Kp*erro);   
+            setWheelVelocity(WheelAxis::LEFT, -Kp*erro);
+            setWheelVelocity(WheelAxis::RIGHT, Kp*erro);   
         }
     }
 
@@ -467,16 +540,16 @@ void curva(Direction sentido){
             currentAngle = gladiator->robot->getData().position.a;
         }
         double erro = angleFromDirection(sentido,currentAngle)-currentAngle;
-        while(abs(erro)>0.01){
+        while(abs(erro)>tol){
             erro = angleFromDirection(sentido,currentAngle)-currentAngle;
             currentAngle = gladiator->robot->getData().position.a;
-            gladiator->control->setWheelSpeed(WheelAxis::LEFT, -Kp*erro);
-            gladiator->control->setWheelSpeed(WheelAxis::RIGHT, Kp*erro);   
+            setWheelVelocity(WheelAxis::LEFT, -Kp*erro);
+            setWheelVelocity(WheelAxis::RIGHT, Kp*erro);   
         }
     }
 
-    gladiator->control->setWheelSpeed(WheelAxis::LEFT, 0);
-    gladiator->control->setWheelSpeed(WheelAxis::RIGHT, 0);   
+    setWheelVelocity(WheelAxis::LEFT, 0);
+    setWheelVelocity(WheelAxis::RIGHT, 0);   
     currentDirection = sentido;
 }
 
@@ -508,19 +581,66 @@ void standard_function(){
     curva(Direction::SOUTH);
     frente();
     curva(Direction::WEST);
-    frente(5);
+    frente(1);
+    curva(Direction::SOUTH);
+    frente(2);
+    curva(Direction::WEST);
+    frente(3);
+    curva(Direction::NORTH);
+    frente(2);
+    curva(Direction::WEST);
+    frente();
     curva(Direction::NORTH);
     frente();
     curva(Direction::EAST);
     frente(3);
+    curva(Direction::SOUTH);
+    frente();
+    curva(Direction::WEST);
+    frente();
+}
+
+void farmar_pontos(){
+    frente(7,0.5);
+    curva(Direction::SOUTH);
+    frente(1,0.5);
+    curva(Direction::WEST);
+    frente(6,0.5);
+    curva(Direction::SOUTH);
+    frente(1,0.5);
+    curva(Direction::EAST);
+    frente(6,0.5);
+    curva(Direction::SOUTH);
+    frente(1,0.5);
+    curva(Direction::WEST);
+    frente(3,0.5);
+    curva(Direction::SOUTH);
+    frente();
+    curva(Direction::WEST);
+    frente();
 }
 
 void loop() {
     if(gladiator->game->isStarted()) { //tester si un match à déjà commencer
         //code de votre stratégie
         gladiator->log("Le jeu a commencé");
-        gladiator->log("Initial speed");
-        gladiator->log(std::to_string().c_str())
+        // setWheelVelocity(WheelAxis::RIGHT,-0.05);
+        // setWheelVelocity(WheelAxis::LEFT,-0.05);
+        // delay(800);
+        // setWheelVelocity(WheelAxis::RIGHT,0);
+        // setWheelVelocity(WheelAxis::LEFT,0);
+        
+        standard_function();
+        // farmar_pontos();
+
+        // curva(Direction::NORTH);
+        // frente();
+        // curva(Direction::EAST);
+        // frente(2);
+        // curva(Direction::WEST);
+        // setWheelVelocity(WheelAxis::RIGHT,0.05);
+        // setWheelVelocity(WheelAxis::LEFT,0.05);
+
         delay(100000);
     } else {
         gladiator->log("Le jeu n'a pas encore commencé");
