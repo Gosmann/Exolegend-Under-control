@@ -16,6 +16,8 @@ vector<int> visitedPlaces = {};
 int initial_i = 0;
 int initial_j = 0;
 
+void curva(Direction sentido);
+
 void reset();
 void setup() {
     //instanciation de l'objet gladiator
@@ -46,6 +48,72 @@ void reset() {
     }
     gladiator->log(to_string(currentDirection).c_str());
     gladiator->log("Ang");
+    //gladiator->control->setWheelSpeed(WheelAxis::LEFT, -0.05);
+    //gladiator->control->setWheelSpeed(WheelAxis::RIGHT, 0.05);
+
+}
+
+double angleFromDirection(Direction sentido){
+    if(sentido==Direction::EAST){
+        return 0;
+    }
+    if(sentido==Direction::NORTH){
+        return M_PI_2;
+    }
+    if(sentido==Direction::WEST){
+        return M_PI;
+    }
+    if(sentido==Direction::SOUTH){
+        return -M_PI;
+    }
+}
+
+bool equalSign(double a, double b){
+    if(a!=0&&b!=0){
+        int sign_a = a/abs(a);
+        int sign_b = b/abs(b);
+        return (sign_a==sign_b);
+    }
+    if(a==0&&b==0){
+        return true;
+    }
+    return false;
+}
+
+void curva(Direction sentido){
+    RobotData data = gladiator->robot->getData();
+    double Kp = 0.15;
+    if(currentDirection==sentido){
+        return;
+    }
+    gladiator->control->setWheelSpeed(WheelAxis::LEFT, -0.05);
+    gladiator->control->setWheelSpeed(WheelAxis::RIGHT, 0.05);
+
+    double currentAngle = gladiator->robot->getData().position.a;
+
+    if(sentido==Direction::NORTH||sentido==Direction::SOUTH){
+        while(!equalSign(sin(currentAngle),sin(angleFromDirection(sentido)))){
+            currentAngle = gladiator->robot->getData().position.a;
+        }
+        while(cos(currentAngle)<cos(angleFromDirection(sentido)*0.9)||cos(currentAngle)>cos(angleFromDirection(sentido)*0.9)){
+
+        }
+        double erro = angleFromDirection(sentido)-currentAngle;
+        while(abs(erro)>0.01){
+            currentAngle = gladiator->robot->getData().position.a;
+            erro = angleFromDirection(sentido)-currentAngle;
+            if(sentido==Direction::NORTH){
+                gladiator->control->setWheelSpeed(WheelAxis::LEFT, -Kp*erro);
+                gladiator->control->setWheelSpeed(WheelAxis::RIGHT, Kp*erro);
+            }else{
+                gladiator->control->setWheelSpeed(WheelAxis::LEFT, Kp*erro);
+                gladiator->control->setWheelSpeed(WheelAxis::RIGHT, -Kp*erro);
+            }
+        }
+    }
+    gladiator->control->setWheelSpeed(WheelAxis::LEFT, 0);
+    gladiator->control->setWheelSpeed(WheelAxis::RIGHT, 0);   
+    currentDirection = sentido;
 }
 
 void noventa_graus(bool antiHorario){
@@ -87,18 +155,18 @@ void frente(){
     Position pos = data.position;
     double ang = pos.a;
 
-    // if(currentDirectionn==Direction::NORTH){
-    //     ang=M_PI/2;
-    // }
-    // if(currentDirection==Direction::EAST){
-    //     ang=0;
-    // }
-    // if(currentDirection==Direction::WEST){
-    //     ang=M_PI;
-    // }
-    // if(currentDirection==Direction::SOUTH){
-    //     ang=3*M_PI/2;
-    // }
+    if(currentDirection==Direction::NORTH){
+        ang=M_PI/2;
+    }
+    if(currentDirection==Direction::EAST){
+        ang=0;
+    }
+    if(currentDirection==Direction::WEST){
+        ang=M_PI;
+    }
+    if(currentDirection==Direction::SOUTH){
+        ang=3*M_PI/2;
+    }
 
     MazeSquare square = gladiator->maze->getNearestSquare();
     MazeSquare current_square = square;
@@ -106,9 +174,14 @@ void frente(){
     gladiator->control->setWheelSpeed(WheelAxis::RIGHT, 0.05);
 
     double erro = 0;
-    double Kp = 0.07;
+    double Kp = 0.1;
+    double current_angle = gladiator->robot->getData().position.a;
     while(current_square.i==square.i&&current_square.j==square.j){
-        erro = gladiator->robot->getData().position.a-ang;
+        current_angle = gladiator->robot->getData().position.a;
+        if(currentDirection==Direction::EAST&&current_angle>(M_PI+M_PI_2)){
+            current_angle=current_angle-(2*M_PI);
+        }
+        erro = current_angle-ang;
 
         gladiator->control->setWheelSpeed(WheelAxis::LEFT, 0.05+Kp*erro);
         gladiator->control->setWheelSpeed(WheelAxis::RIGHT, 0.05-Kp*erro);
@@ -129,42 +202,16 @@ void loop() {
     if(gladiator->game->isStarted()) { //tester si un match à déjà commencer
         //code de votre stratégie
         gladiator->log("Le jeu a commencé");
-        MazeSquare currentSquare = gladiator->maze->getNearestSquare();
-        if(currentSquare.j>=initial_j){
-            if(currentSquare.southSquare!=NULL&&notVisitedSquare(currentSquare.southSquare)){
-                while(currentDirection!=Direction::SOUTH){
-                    noventa_graus(false);
-                }
-                frente();
-            }else if(currentSquare.eastSquare!=NULL&&notVisitedSquare(currentSquare.eastSquare)){
-                while(currentDirection!=Direction::EAST){
-                    noventa_graus(false);
-                }
-                frente();
-            }else if(currentSquare.northSquare!=NULL&&notVisitedSquare(currentSquare.northSquare)){
-                while(currentDirection!=Direction::NORTH){
-                    noventa_graus(true);
-                }
-                frente();
-            }
-        }else{
-            if(currentSquare.northSquare!=NULL&&notVisitedSquare(currentSquare.northSquare)){
-                while(currentDirection!=Direction::NORTH){
-                    noventa_graus(true);
-                }
-                frente();
-            } else if(currentSquare.eastSquare!=NULL&&notVisitedSquare(currentSquare.eastSquare)){
-                while(currentDirection!=Direction::EAST){
-                    noventa_graus(false);
-                }
-                frente();
-            }else if(currentSquare.southSquare!=NULL&&notVisitedSquare(currentSquare.southSquare)){
-                while(currentDirection!=Direction::SOUTH){
-                    noventa_graus(false);
-                }
-                frente();
-            }
-        }
+        //curva(Direction::SOUTH);
+        gladiator->control->setWheelSpeed(WheelAxis::LEFT, 0.01);
+        gladiator->control->setWheelSpeed(WheelAxis::RIGHT, -0.01);
+        gladiator->log(to_string(gladiator->robot->getData().position.a).c_str());
+        // curva(Direction::NORTH);
+        // delay(5000);
+        // // curva(Direction::WEST);
+        // // delay(5000);
+        // curva(Direction::SOUTH);
+        // delay(5000);
     } else {
         gladiator->log("Le jeu n'a pas encore commencé");
     }
