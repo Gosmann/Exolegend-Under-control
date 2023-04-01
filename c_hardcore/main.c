@@ -1,46 +1,14 @@
 
 #include <stdio.h>
+#include "aap.h"
 
-typedef struct position{
-
-    double x;
-    double y;
-    double a;
-
-} position ;
-
-typedef struct coin{
-    
-    char value;
-    position p;
-
-} coin ;
-
-typedef struct robot{
-    
-    position p;
-    
-
-} robot ;
-
-
-typedef struct maze_square{
-    
-    char i;
-    char j;
-
-    struct maze_square* north;
-    struct maze_square* south;
-    struct maze_square* east;
-    struct maze_square* west;
-
-} maze_square ;
-
-
+void from_map_to_graph(char map[14][14] , maze_square maze[14][14] );
+void show_graph( maze_square maze[14][14] );
 
 int main(){
     
     maze_square maze[14][14] = {0} ;
+    //maze_square * init[14][14] = &(maze[0][0]);
 
     char map[14][14] = {
     // 0   1   2   3   4   5   6   7   8   9  10  11  12  13 
@@ -61,21 +29,64 @@ int main(){
     } ;
 
     int i, j;
+    
+    from_map_to_graph( map, maze ) ;
+    
+    printf("FINISHED! \n");
+
+    show_graph( maze );
+    
+    //look_for(position start, position finish, maze_square maze);
+    position start = {0};
+    start.x = 0;
+    start.y = 7;
+
+    position finish = {0};
+    finish.x = 0;
+    finish.y = 8;
+
+    char looked[14][14] = {0} ;
+
+    int deep = 0;
+    
+
+
+}   
+
+
+void show_graph( maze_square maze[14][14] ){
+    int i, j;
+
+    for(i = 0; i < 14 ; i++){
+        for(j = 0; j < 14; j++){
+            maze_square * init = &  (maze)[i][j] ; 
+            printf("[%p] i:[%2d] j:[%2d] N:[%p] S:[%p] E:[%p] W:[%p] \n", init,
+                init[0].i, init[0].j, init[0].north, init[0].south, init[0].east, init[0].west );
+        
+        }
+    }
+}
+
+void from_map_to_graph(char map[14][14] , maze_square maze[14][14] ){
+    int i, j;
+
+    //printf("%d", sizeof(maze));
 
     for(i = 0 ; i < 14 ; i++){
         for(j = 0 ; j < 14; j++){
 
-            int wall = map[i][j];
+            char wall = map[j][i];
 
-            maze[i][j].i = i;
-            maze[i][j].j = j;
-
+            (maze)[i][j].i = i;
+            (maze)[i][j].j = j;
+                               
             if(wall == 0){
                 maze[i][j].north = & maze[i][j+1] ; 
                 maze[i][j].south = & maze[i][j-1] ;
                 maze[i][j].east  = & maze[i+1][j] ;
                 maze[i][j].west  = & maze[i-1][j] ;
             }
+            
             else if(wall == 1){
                 maze[i][j].north = & maze[i][j+1] ; 
                 maze[i][j].south = & maze[i][j-1] ;
@@ -166,22 +177,9 @@ int main(){
                 maze[i][j].east  = NULL ;
                 maze[i][j].west  = NULL ;
             }
-
-
+            
+            
+            
         }
     }
-
-    printf("FINISHED! \n");
-
-    for(i = 0; i < 14 ; i++){
-        for(j = 0; j < 14; j++){
-            maze_square * init = & maze[i][j] ; 
-            printf("[%p] i:[%d] j:[%d] N:[%p] S:[%p] E:[%p] W:[%p] \n", init,
-                init[0].i, init[0].j, init[0].north, init[0].south, init[0].east, init[0].west );
-        
-        }
-    }
-
-    
-    
 }
