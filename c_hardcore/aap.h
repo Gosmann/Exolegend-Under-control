@@ -36,6 +36,7 @@ typedef struct maze_square{
     
     char i;
     char j;
+    coin c;
 
     struct maze_square* north;
     struct maze_square* south;
