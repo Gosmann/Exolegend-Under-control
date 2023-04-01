@@ -48,8 +48,6 @@ void reset() {
     gladiator->log("Ang");
 }
 
-
-
 void noventa_graus(bool antiHorario){
     RobotData data = gladiator->robot->getData();
     Position pos = data.position;
