@@ -1,11 +1,35 @@
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
 #include "aap.h"
 
-void from_map_to_graph(char map[14][14] , maze_square maze[14][14] );
-void show_graph( maze_square maze[14][14] );
+void from_rocks_to_graph(char rocks[14][14] , maze_square maze[14][14] );
+void   from_map_to_graph(char map[14][14]   , maze_square maze[14][14] );
 
-int look_for( maze_square maze[14][14], int_position start, int_position finish, int deep, int deep_w, int flag){
+void show_graph( maze_square maze[14][14] );
+int look_for( maze_square maze[14][14], int_position start, int_position finish, int deep, int deep_w, int max_d);
+
+
+
+int do_the_for( maze_square maze[14][14], int_position start, int_position finish, int deep, int deep_w, int max_d){
+    int i;
+    int dist;
+
+    for(i = 0; i < max_d; i++){
+
+        dist = look_for( maze, start, finish, deep, deep_w, i);
+
+        if(dist != -1){
+            break;
+        }
+
+    }
+    return dist;
+}
+
+int look_for( maze_square maze[14][14], int_position start, int_position finish, int deep, int deep_w, int max_d){
     //printf("inside \n");
     
     int i; int ans = -1;
@@ -15,37 +39,34 @@ int look_for( maze_square maze[14][14], int_position start, int_position finish,
     //printf("[%d] [%d] [%d] [%d] -> [%d]/[%d] \n", start.x, start.y, finish.x, finish.y, deep, deep_w);
     if( start.x == finish.x && start.y == finish.y ){
         
-        //printf("correct! [%d] \n", deep);
-        flag = 1;
-        
+        //printf("correct! [%d] \n", deep);        
         return deep;
     }
-
-    else if( deep < 12 && flag == 0 ){
+    else if( deep < max_d ){
         
-        if( maze[start.x][start.y].north != NULL  ){            
+        if( maze[start.x][start.y].north != NULL ){            
             new.x = start.x;
-            new.y = start.y + 1;
-            ans = look_for( maze, new, finish, deep+1, deep_w, flag);   
+            new.y = start.y + 1 ; srand((unsigned int) time(NULL));
+            ans = look_for( maze, new, finish, deep+1, deep_w, max_d);   
             //printf("[%d] - ans \n", ans);
         }
 
         if( maze[start.x][start.y].south != NULL && ans == -1 ){            
             new.x = start.x;
             new.y = start.y - 1;
-            ans = look_for( maze, new, finish, deep+1, deep_w, flag);        
+            ans = look_for( maze, new, finish, deep+1, deep_w, max_d);        
         }
 
         if( maze[start.x][start.y].east != NULL && ans == -1 ){    
             new.x = start.x + 1;
             new.y = start.y;        
-            ans = look_for( maze, new, finish, deep+1, deep_w, flag);        
+            ans = look_for( maze, new, finish, deep+1, deep_w, max_d);        
         }
         
         if( maze[start.x][start.y].west != NULL && ans == -1 ){            
             new.x = start.x - 1 ;
             new.y = start.y;
-            ans = look_for( maze, new, finish, deep+1, deep_w, flag);        
+            ans = look_for( maze, new, finish, deep+1, deep_w, max_d);        
         }
         
         return ans;
@@ -56,6 +77,18 @@ int look_for( maze_square maze[14][14], int_position start, int_position finish,
         return -1;    
     }
         
+}
+
+void from_rocks_to_graph(char rocks[14][14] , maze_square maze[14][14] ){
+    int i, j;
+
+    //printf("%d", sizeof(maze));
+
+    for(i = 0 ; i < 14 ; i++){
+        for(j = 0 ; j < 14; j++){
+            (maze)[i][j].c.value = rocks[i][j];            
+        }
+    }
 }
 
 int main(){
@@ -81,33 +114,66 @@ int main(){
     { 13, 12, 05, 12, 05, 14, 05, 12, 07, 12, 05, 12, 05, 13} 
     } ;
 
+    char rocks[14][14] = {
+    { 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1}, // 0
+    { 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1}, // 1
+    { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, // 2
+    { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, // 3
+    { 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1}, // 4
+    { 1, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1}, // 5
+    { 0, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1}, // 6
+    { 1, 1, 1, 1, 2, 1, 2, 2, 1, 2, 1, 1, 1, 0}, // 7
+    { 1, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1}, // 8
+    { 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1}, // 9
+    { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, // A
+    { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, // B
+    { 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1}, // C
+    { 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1}  // D
+    } ; 
+
     int i, j;
     
     from_map_to_graph( map, maze ) ;
-    
-    //printf("FINISHED! \n");
+    from_rocks_to_graph( rocks, maze ) ; 
 
+    // maze now has rocks values
+    
     //show_graph( maze );
     
     //look_for(position start, position finish, maze_square maze);
     int_position start = {0};
     start.x = 0;
-    start.y = 7;
+    start.y = 0;
 
     int_position finish = {0};
     finish.x = 7;
     finish.y = 7;
 
-    char looked[14][14] = {0} ;
-
     int deep = 0;
     int deep_w = 0;
-    int flag = 0;
+    int max_d = 100;
+    
+    //int dist = do_the_for( maze, start, finish, deep, deep_w, max_d);
+    //do_the_for( maze, start, finish, deep, deep_w, 8);
+    //dist = 0;
+    //printf("%d \n", dist);
 
-    int dist = look_for( maze, start, finish, deep, deep_w, flag );
-    //int dist = 0;
-    printf("dist: [%d] \n", dist);
+    
+    srand((unsigned int) time(NULL));
+    for(i = 0 ; i < 1000 ; i++){
+        //printf("rand: %d   ", rand() % 14);
+        
+        srand(i);
+        start.x = (rand() % 14); 
+        start.y = (rand() % 14); 
+        finish.x = (rand() % 14); 
+        finish.y = (rand() % 14); 
+        printf("%d %d %d %d \n", start.x, start.y, finish.x, finish.y);
 
+        int dist = do_the_for( maze, start, finish, deep, deep_w, 8);
+        printf("[%d] \n", dist);
+    }
+    
 }   
 
 
@@ -240,3 +306,4 @@ void from_map_to_graph(char map[14][14] , maze_square maze[14][14] ){
         }
     }
 }
+
