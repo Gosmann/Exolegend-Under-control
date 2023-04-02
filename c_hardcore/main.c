@@ -162,7 +162,7 @@ float calculate_cost(maze_square maze[14][14], int_position start, char rocks[14
     return cost;
 }
 
-float get_best_cost(maze_square maze[14][14], int_position start, int deep, char rocks[14][14], int max_d, int sec[10], float best, float cost[10]){
+float get_best_cost(maze_square maze[14][14], int_position start, int deep, char rocks[14][14], int max_d, int sec[10], int best_sec[10], float best, float cost[10]){
     
     //print_known_rocks( rocks );
 
@@ -183,13 +183,12 @@ float get_best_cost(maze_square maze[14][14], int_position start, int deep, char
 
     if( deep < max_d ){
         
-
         if( maze[start.x][start.y].north != NULL ){            
             new.x = start.x;
             new.y = start.y + 1 ; 
             sec[deep] = 'N';
             
-            get_best_cost(maze, new, deep+1, rocks, max_d, sec, best, cost);
+            best = get_best_cost(maze, new, deep+1, rocks, max_d, sec, best_sec, best, cost);
             //ans = look_for_rocks( maze, new, deep+1, rocks, max_d);   
             //printf("[%d] - ans \n", ans);
         }
@@ -199,7 +198,7 @@ float get_best_cost(maze_square maze[14][14], int_position start, int deep, char
             new.y = start.y - 1;
             sec[deep] = 'S';
 
-            get_best_cost(maze, new, deep+1, rocks, max_d, sec, best, cost);
+            best = get_best_cost(maze, new, deep+1, rocks, max_d, sec, best_sec, best, cost);
         }
 
         if( maze[start.x][start.y].east != NULL && ans == -1 ){    
@@ -207,7 +206,7 @@ float get_best_cost(maze_square maze[14][14], int_position start, int deep, char
             new.y = start.y;   
             sec[deep] = 'E';
 
-            get_best_cost(maze, new, deep+1, rocks, max_d, sec, best, cost);
+            best = get_best_cost(maze, new, deep+1, rocks, max_d, sec, best_sec, best, cost);
         }
         
         if( maze[start.x][start.y].west != NULL && ans == -1 ){            
@@ -215,11 +214,11 @@ float get_best_cost(maze_square maze[14][14], int_position start, int deep, char
             new.y = start.y;
             sec[deep] = 'W';
 
-            get_best_cost(maze, new, deep+1, rocks, max_d, sec, best, cost);
+            best = get_best_cost(maze, new, deep+1, rocks, max_d, sec, best_sec, best, cost);
         }
         
         rocks[start.x][start.y] = prev;
-        return (0);
+        return (best);
     }
 
     else{
@@ -230,13 +229,23 @@ float get_best_cost(maze_square maze[14][14], int_position start, int deep, char
         float acc = 0;
 
         for(i = 0 ; i < 10 ; i++){
-            printf("%c ", sec[i]);
             acc += cost[i] ;
+            printf("%c ", sec[i]);
         }
         printf("acc[%8.2f] \n", acc);
 
+        if(acc < best){
+            best = acc;
+            for(i = 0 ; i < 10 ; i++){
+                best_sec[i] = sec[i] ;
+                //printf("%c ", sec[i]);
+            }
+            //printf("acc[%8.2f] \n", acc);
+        }
+
+
         rocks[start.x][start.y] = prev;
-        return (0);    
+        return (best);    
     }
 
     
@@ -311,10 +320,10 @@ int main(){
     
     char rocks_arg[14][14] = {0} ;
     look_for_rocks(maze, start, 0, rocks_arg, 8);
-    print_known_rocks( rocks_arg );
+    //print_known_rocks( rocks_arg );
 
     int num_rocks = get_num_of_rocks( rocks_arg);
-    printf("[%d] \n", num_rocks);
+    //printf("[%d] \n", num_rocks);
     
     //float calculate_cost(maze_square maze[14][14], int_position start, char rocks[14][14]){    
     /*
@@ -330,7 +339,16 @@ int main(){
     */
 
     float cost_now[10] = {0};
-    float cost = get_best_cost(maze, start, deep, rocks_arg, 5, sec, 0, cost_now);
+    int best_sec[10] = {0};
+    float best = get_best_cost(maze, start, deep, rocks_arg, 5, sec, best_sec, 1e12, cost_now);
+
+    printf("\n\nbest_move: [%c] \n", best_sec[0]);
+    for(i = 0 ; i < 10 ; i++){
+        printf("%c ", best_sec[i]);
+    }
+    printf("acc[%8.2f] \n", best);
+
+
 
     //int dist = do_the_for( maze, start, finish, deep, deep_w, max_d);
     //do_the_for( maze, start, finish, deep, deep_w, 8);
