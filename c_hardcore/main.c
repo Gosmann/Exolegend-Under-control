@@ -5,13 +5,16 @@
 
 #include "aap.h"
 
+#define K_C  10.0
+#define K_D   0.0
+
 void from_rocks_to_graph(char rocks[14][14] , maze_square maze[14][14] );
 void   from_map_to_graph(char map[14][14]   , maze_square maze[14][14] );
+void print_known_rocks(char rocks_arg[14][14]);
+int get_num_of_rocks(char rocks_arg[14][14]);
 
 void show_graph( maze_square maze[14][14] );
 int look_for( maze_square maze[14][14], int_position start, int_position finish, int deep, int deep_w, int max_d);
-
-
 
 int do_the_for( maze_square maze[14][14], int_position start, int_position finish, int deep, int deep_w, int max_d){
     int i;
@@ -79,17 +82,169 @@ int look_for( maze_square maze[14][14], int_position start, int_position finish,
         
 }
 
-void from_rocks_to_graph(char rocks[14][14] , maze_square maze[14][14] ){
+int look_for_rocks( maze_square maze[14][14], int_position start, int deep, char rocks[14][14], int max_d ){
+
+    //printf("inside \n");
+    int i; int ans = -1;
+    
+    int_position new = {0};
+
+    //printf("[%d] [%d] [%d] [%d] -> [%d]/[%d] \n", start.x, start.y, finish.x, finish.y, deep, deep_w);
+    if( maze[start.x][start.y].c.value > 0 ){
+        rocks[start.x][start.y] = maze[start.x][start.y].c.value;
+    }
+    if( deep < max_d ){
+        
+        if( maze[start.x][start.y].north != NULL ){            
+            new.x = start.x;
+            new.y = start.y + 1 ; srand((unsigned int) time(NULL));
+            
+            ans = look_for_rocks( maze, new, deep+1, rocks, max_d);   
+            //printf("[%d] - ans \n", ans);
+        }
+
+        if( maze[start.x][start.y].south != NULL && ans == -1 ){            
+            new.x = start.x;
+            new.y = start.y - 1;
+            ans = look_for_rocks( maze, new, deep+1, rocks, max_d);   
+        }
+
+        if( maze[start.x][start.y].east != NULL && ans == -1 ){    
+            new.x = start.x + 1;
+            new.y = start.y;        
+            ans = look_for_rocks( maze, new, deep+1, rocks, max_d);   
+        }
+        
+        if( maze[start.x][start.y].west != NULL && ans == -1 ){            
+            new.x = start.x - 1 ;
+            new.y = start.y;
+            ans = look_for_rocks( maze, new, deep+1, rocks, max_d);          
+        }
+        
+        return ans;
+    }
+
+    else{
+        return -1;    
+    }
+
+}
+
+float calculate_cost(maze_square maze[14][14], int_position start, char rocks[14][14]){
     int i, j;
 
-    //printf("%d", sizeof(maze));
+    float cost = 0;
 
-    for(i = 0 ; i < 14 ; i++){
-        for(j = 0 ; j < 14; j++){
-            (maze)[i][j].c.value = rocks[i][j];            
+    cost += ((float)rocks[start.x][start.y]) * -1 * K_C  ;
+    //rocks[start.x][start.y] = 0;
+
+    //printf("nooow \n");
+    //print_known_rocks( rocks );
+
+    for(i = 0 ; i < 14 ; i++ ){
+        for(j = 0 ; j < 14 ; j++){
+            
+            if(rocks[i][j] != 0){
+                //printf("%d %d \n", i, j);
+
+                int_position finish = {0} ;
+                finish.x = i;
+                finish.y = j;
+                int deep = 0; int deep_w = 0;
+
+
+                cost += (do_the_for( maze, start, finish, deep, deep_w, 12) * K_D ) / ((float)rocks[i][j])  ;
+                //printf("%f \n", cost);
+            }
         }
     }
+    
+    return cost;
 }
+
+float get_best_cost(maze_square maze[14][14], int_position start, int deep, char rocks[14][14], int max_d, int sec[10], float best, float cost[10]){
+    
+    //print_known_rocks( rocks );
+
+    //printf("inside \n");
+    int i; int ans = -1;
+    
+    int_position new = {0};
+
+    float now_cost = calculate_cost(maze, start, rocks);
+    
+    int prev = rocks[start.x][start.y] ;
+    rocks[start.x][start.y] = 0;
+
+    //printf("[%d] [%d] -> [%d]/[%d] -> [%8.2f][%8.2f][%8.2f][%8.2f][%8.2f][%8.2f] -> [%8.2f] \n", 
+    //    start.x, start.y, deep, 5, cost[0],cost[1],cost[2],cost[3],cost[4],cost[5], now_cost);
+    //printf("%f \n", now_cost);
+    cost[deep] = now_cost;
+
+    if( deep < max_d ){
+        
+
+        if( maze[start.x][start.y].north != NULL ){            
+            new.x = start.x;
+            new.y = start.y + 1 ; 
+            sec[deep] = 'N';
+            
+            get_best_cost(maze, new, deep+1, rocks, max_d, sec, best, cost);
+            //ans = look_for_rocks( maze, new, deep+1, rocks, max_d);   
+            //printf("[%d] - ans \n", ans);
+        }
+
+        if( maze[start.x][start.y].south != NULL && ans == -1 ){            
+            new.x = start.x;
+            new.y = start.y - 1;
+            sec[deep] = 'S';
+
+            get_best_cost(maze, new, deep+1, rocks, max_d, sec, best, cost);
+        }
+
+        if( maze[start.x][start.y].east != NULL && ans == -1 ){    
+            new.x = start.x + 1;
+            new.y = start.y;   
+            sec[deep] = 'E';
+
+            get_best_cost(maze, new, deep+1, rocks, max_d, sec, best, cost);
+        }
+        
+        if( maze[start.x][start.y].west != NULL && ans == -1 ){            
+            new.x = start.x - 1 ;
+            new.y = start.y;
+            sec[deep] = 'W';
+
+            get_best_cost(maze, new, deep+1, rocks, max_d, sec, best, cost);
+        }
+        
+        rocks[start.x][start.y] = prev;
+        return (0);
+    }
+
+    else{
+        //printf("[%8.2f][%8.2f][%8.2f][%8.2f][%8.2f][%8.2f][%8.2f] - ", 
+        //    cost[0], cost[1], cost[2], cost[3], cost[4], cost[5], cost[6] + now_cost);
+        
+
+        float acc = 0;
+
+        for(i = 0 ; i < 10 ; i++){
+            printf("%c ", sec[i]);
+            acc += cost[i] ;
+        }
+        printf("acc[%8.2f] \n", acc);
+
+        rocks[start.x][start.y] = prev;
+        return (0);    
+    }
+
+    
+
+}
+
+
+
 
 int main(){
     
@@ -137,7 +292,7 @@ int main(){
     from_rocks_to_graph( rocks, maze ) ; 
 
     // maze now has rocks values
-    
+
     //show_graph( maze );
     
     //look_for(position start, position finish, maze_square maze);
@@ -145,20 +300,44 @@ int main(){
     start.x = 0;
     start.y = 0;
 
-    int_position finish = {0};
-    finish.x = 7;
-    finish.y = 7;
+    //int_position finish = {0};
+    //finish.x = 7;
+    //finish.y = 7;
 
     int deep = 0;
     int deep_w = 0;
-    int max_d = 100;
+    int sec[10] = {0};
+    //int max_d = 100;
     
+    char rocks_arg[14][14] = {0} ;
+    look_for_rocks(maze, start, 0, rocks_arg, 8);
+    print_known_rocks( rocks_arg );
+
+    int num_rocks = get_num_of_rocks( rocks_arg);
+    printf("[%d] \n", num_rocks);
+    
+    //float calculate_cost(maze_square maze[14][14], int_position start, char rocks[14][14]){    
+    /*
+    start.x = 6;
+    start.y = 4;
+    float cost = calculate_cost(maze, start, rocks_arg);
+    printf("cost: [%f] \n", cost );
+    
+    start.x = 5;
+    start.y = 3;
+    cost = calculate_cost(maze, start, rocks_arg);
+    printf("cost: [%f] \n", cost );
+    */
+
+    float cost_now[10] = {0};
+    float cost = get_best_cost(maze, start, deep, rocks_arg, 5, sec, 0, cost_now);
+
     //int dist = do_the_for( maze, start, finish, deep, deep_w, max_d);
     //do_the_for( maze, start, finish, deep, deep_w, 8);
     //dist = 0;
     //printf("%d \n", dist);
 
-    
+    /*    
     srand((unsigned int) time(NULL));
     for(i = 0 ; i < 1000 ; i++){
         //printf("rand: %d   ", rand() % 14);
@@ -173,9 +352,33 @@ int main(){
         int dist = do_the_for( maze, start, finish, deep, deep_w, 8);
         printf("[%d] \n", dist);
     }
-    
+    */
+
 }   
 
+int get_num_of_rocks(char rocks_arg[14][14]){
+    int i, j;
+    int count = 0;
+
+    for(i = 0 ; i < 14 ; i++){
+        for(j = 0 ; j < 14 ; j++){
+            if(rocks_arg[i][j] != 0 )count++;
+        }
+    }
+
+    return count;
+}
+
+void print_known_rocks(char rocks_arg[14][14]){
+    int i, j;
+
+    for(i = 0 ; i < 14 ; i++){
+        for(j = 0 ; j < 14 ; j++){
+            printf("%d ", rocks_arg[i][j]);
+        }
+        printf(" \n");
+    }
+}
 
 void show_graph( maze_square maze[14][14] ){
     int i, j;
@@ -307,3 +510,14 @@ void from_map_to_graph(char map[14][14] , maze_square maze[14][14] ){
     }
 }
 
+void from_rocks_to_graph(char rocks[14][14] , maze_square maze[14][14] ){
+    int i, j;
+
+    //printf("%d", sizeof(maze));
+
+    for(i = 0 ; i < 14 ; i++){
+        for(j = 0 ; j < 14; j++){
+            (maze)[i][j].c.value = rocks[i][j];            
+        }
+    }
+}
