@@ -7,6 +7,11 @@
 
 #define K_C  10.0
 #define K_D   0.0
+#define MAXLEN 20
+#define COUCHES 19
+
+#define START_X 0
+#define START_Y 0
 
 void from_rocks_to_graph(char rocks[14][14] , maze_square maze[14][14] );
 void   from_map_to_graph(char map[14][14]   , maze_square maze[14][14] );
@@ -153,7 +158,7 @@ float calculate_cost(maze_square maze[14][14], int_position start, char rocks[14
                 int deep = 0; int deep_w = 0;
 
 
-                cost += (do_the_for( maze, start, finish, deep, deep_w, 12) * K_D ) / ((float)rocks[i][j])  ;
+                //cost += (do_the_for( maze, start, finish, deep, deep_w, 8) * K_D ) / ((float)rocks[i][j])  ;
                 //printf("%f \n", cost);
             }
         }
@@ -162,7 +167,7 @@ float calculate_cost(maze_square maze[14][14], int_position start, char rocks[14
     return cost;
 }
 
-float get_best_cost(maze_square maze[14][14], int_position start, int deep, char rocks[14][14], int max_d, int sec[10], int best_sec[10], float best, float cost[10]){
+float get_best_cost(maze_square maze[14][14], int_position start, int deep, char rocks[14][14], int max_d, int sec[MAXLEN], int best_sec[MAXLEN], float best, float cost[MAXLEN]){
     
     //print_known_rocks( rocks );
 
@@ -228,15 +233,15 @@ float get_best_cost(maze_square maze[14][14], int_position start, int deep, char
 
         float acc = 0;
 
-        for(i = 0 ; i < 10 ; i++){
+        for(i = 0 ; i < MAXLEN ; i++){
             acc += cost[i] ;
-            printf("%c ", sec[i]);
+            //printf("%c ", sec[i]);
         }
-        printf("acc[%8.2f] \n", acc);
+        //printf("acc[%8.2f] \n", acc);
 
         if(acc < best){
             best = acc;
-            for(i = 0 ; i < 10 ; i++){
+            for(i = 0 ; i < MAXLEN ; i++){
                 best_sec[i] = sec[i] ;
                 //printf("%c ", sec[i]);
             }
@@ -306,8 +311,8 @@ int main(){
     
     //look_for(position start, position finish, maze_square maze);
     int_position start = {0};
-    start.x = 0;
-    start.y = 0;
+    start.x = START_X;
+    start.y = START_Y;
 
     //int_position finish = {0};
     //finish.x = 7;
@@ -315,12 +320,12 @@ int main(){
 
     int deep = 0;
     int deep_w = 0;
-    int sec[10] = {0};
+    int sec[MAXLEN] = {0};
     //int max_d = 100;
     
     char rocks_arg[14][14] = {0} ;
-    look_for_rocks(maze, start, 0, rocks_arg, 8);
-    //print_known_rocks( rocks_arg );
+    look_for_rocks(maze, start, 0, rocks_arg, COUCHES);
+    print_known_rocks( rocks_arg );
 
     int num_rocks = get_num_of_rocks( rocks_arg);
     //printf("[%d] \n", num_rocks);
@@ -338,15 +343,15 @@ int main(){
     printf("cost: [%f] \n", cost );
     */
 
-    float cost_now[10] = {0};
-    int best_sec[10] = {0};
-    float best = get_best_cost(maze, start, deep, rocks_arg, 5, sec, best_sec, 1e12, cost_now);
+    float cost_now[MAXLEN] = {0};
+    int best_sec[MAXLEN] = {0};
+    float best = get_best_cost(maze, start, deep, rocks_arg, COUCHES, sec, best_sec, 1e12, cost_now);
 
     printf("\n\nbest_move: [%c] \n", best_sec[0]);
-    for(i = 0 ; i < 10 ; i++){
+    for(i = 0 ; i < MAXLEN ; i++){
         printf("%c ", best_sec[i]);
     }
-    printf("acc[%8.2f] \n", best);
+    printf("acc[%8.2f] -- acc_med[%8.2f] \n", best, best / (float)COUCHES);
 
 
 
